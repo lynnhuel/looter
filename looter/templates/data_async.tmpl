@@ -6,10 +6,10 @@ domain = ''
 
 async def crawl(url):
     tree = await lt.async_fetch(url)
-    items = tree.cssselect()
+    items = tree.css()
     for item in items:
         data = dict()
-        # data[...] = item.cssselect(...)
+        # data[...] = item.css(...)
         pprint(data)
 
 

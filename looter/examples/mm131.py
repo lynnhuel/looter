@@ -1,4 +1,3 @@
-import re
 import looter as lt
 from concurrent import futures
 
@@ -10,18 +9,17 @@ headers = {
 
 def crawl(url):
     tree = lt.fetch(url)
-    imgs = tree.cssselect('dl.list-left dd')[:-1]
+    imgs = tree.css('dl.list-left dd')[:-1]
     for img in imgs:
-        link = img.cssselect('a')[0].get('href')
+        link = img.css('a::attr(href)').extract_first()
         bango = link.split('/')[-1][:-5]
         detail = lt.fetch(link, headers=headers)
-        pagination = detail.cssselect('.content-page .page-ch')[0].text
-        max_page = int(re.findall(r'\d+', pagination)[0])
-        img_urls = [f'http://img1.mm131.me/pic/{bango}/{n}.jpg' for n in range(1, max_page+1)]
+        max_page = detail.css('.content-page .page-ch::text').re_first(r'\d+')
+        img_urls = [f'http://img1.mm131.me/pic/{bango}/{n}.jpg' for n in range(1, int(max_page)+1)]
         lt.async_save_imgs(img_urls, headers=headers, random_name=True)
 
 
 if __name__ == '__main__':
     tasklist = [*[f'{domain}/xinggan/'] ,*[f'{domain}/xinggan/list_6_{n}.html' for n in range(2, 153)]]
-    with futures.ThreadPoolExecutor(50) as executor:
+    with futures.ThreadPoolExecutor(30) as executor:
         executor.map(crawl, tasklist)

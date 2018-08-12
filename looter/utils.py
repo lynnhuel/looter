@@ -66,7 +66,8 @@ def send_request(url: str, timeout=60, headers=None, proxies=None, cookies=None)
         headers = {'User-Agent': UserAgent().random}
     url = ensure_schema(url)
     try:
-        res = requests.get(url, headers=headers, timeout=timeout, proxies=proxies, cookies=cookies)
+        res = requests.get(url, headers=headers, timeout=timeout,
+                           proxies=proxies, cookies=cookies)
         res.raise_for_status()
     except Exception as e:
         print(f'[Err] {e}')
@@ -84,8 +85,8 @@ def rectify(name: str) -> str:
     Returns:
         The rectified filename.
     """
-    name = ''.join([c for c in unquote(name) if c not in {
-                   '?', '<', '>', '|', '*', '"', ":"}])
+    illegal_charset = {'?', '<', '>', '|', '*', '"', ":"}
+    name = ''.join([c for c in unquote(name) if c not in illegal_charset])
     return name
 
 
@@ -99,10 +100,6 @@ def get_img_info(url: str, max_length=160) -> tuple:
     Returns:
         tuple: The url of an image and its name.
     """
-    if hasattr(url, 'tag') and url.tag == 'a':
-        url = url.get('href')
-    elif hasattr(url, 'tag') and url.tag == 'img':
-        url = url.get('src')
     name = ensure_schema(url).split('/')[-1]
     fname, ext = rectify(name).rsplit('.', 1)
     name = f'{fname[:max_length]}.{ext}'
@@ -127,9 +124,14 @@ def save_img(url: str, random_name=False, headers=None, proxies=None, cookies=No
     if random_name:
         fname, ext = os.path.splitext(name)
         name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
-    with open(name, 'wb') as f:
-        f.write(send_request(url, headers=headers, proxies=proxies, cookies=cookies).content)
-        print(f'Saved {name}')
+    try:
+        data = send_request(url, headers=headers,
+                            proxies=proxies, cookies=cookies).content
+        with open(name, 'wb') as f:
+            f.write(data)
+            print(f'Saved {name}')
+    except Exception:
+        print(f'Failed: {url}')
 
 
 async def async_save_img(url: str, random_name=False, headers=None, proxy=None, cookies=None):

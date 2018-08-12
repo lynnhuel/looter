@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='looter',
-    version='1.85',
+    version='1.87',
     description=(
         'A python package aiming at avoiding unnecessary repetition in making common crawlers.'
     ),
@@ -40,7 +40,7 @@ setup(
         'lxml',
         'docopt',
         'fake-useragent',
-        'cssselect',
+        'parsel',
         'aiohttp'
     ]
 )

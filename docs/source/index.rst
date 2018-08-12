@@ -23,7 +23,7 @@ A super-lightweight crawler tool.
 -  automatically generate spider with template
 -  blazing fast speed with concurrent.futures or asyncio
 -  provides shell to debug your spider
--  easy web content extracting with cssselector
+-  easy web content extracting with parsel (just the same as Scrapy)
 -  fake-useragent included (disguise as a web browser)
 -  built in many useful functions
 -  provides many examples for you to start
@@ -50,7 +50,7 @@ Then, you can crawl all the images of the page in just 2-line code
 
 .. code:: python
 
-    >>> imgs = tree.cssselect('a.directlink')
+    >>> imgs = tree.css('a.directlink::attr(href)').extract()
     >>> save_imgs(imgs)
 
 Or if you want, just 1-line is OK :d
@@ -95,10 +95,10 @@ your spider.
 
     def crawl(url):
         tree = lt.fetch(url)
-        items = tree.cssselect('ul li')
+        items = tree.css('ul li')
         for item in items:
             data = dict()
-            # data[...] = item.cssselect(...)
+            # data[...] = item.css(...)
             pprint(data)
 
 In most cases, the contents you want to crawl is a list (ul or ol tag in
@@ -107,14 +107,15 @@ HTML), you can select them as items.
 Then, just use a for loop to iterate them, and select the things you
 want, storing them to a dict.
 
-But before you finish this spider, you'd better debug your cssselect
-codes using shell provided by looter.
+**Notice: looter use parsel to parse the HTML, just the same as Scrapy.**
+
+But before you finish this spider, you'd better debug your codes using shell provided by looter.
 
 .. code:: python
 
-    >>> items = tree.cssselect('ul li')
+    >>> items = tree.css('ul li')
     >>> item = items[0]
-    >>> item.cssselect(anything you want to crawl)
+    >>> item.css(anything you want to crawl)
     # Pay attention to the outputs!
 
 After debugging, your spider is done. Very simple, isn't it :)

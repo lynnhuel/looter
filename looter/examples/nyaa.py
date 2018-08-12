@@ -6,19 +6,19 @@ domain = 'https://nyaa.si'
 
 async def crawl(url):
     tree = await lt.async_fetch(url)
-    posts = tree.cssselect('tr.default')
+    posts = tree.css('tr.default')
     for post in posts:
         data = dict()
-        data['name'] = post.cssselect('td[colspan="2"] a')[-1].get('title')
-        data['category'] = post.cssselect('td[style="padding:0 4px;"] a')[-1].get('title')
-        link_and_magnet = post.cssselect('td.text-center')[0]
-        data['link'] = domain + link_and_magnet.cssselect('a')[0].get('href')
-        data['magnet'] = link_and_magnet.cssselect('a')[1].get('href')
-        data['size'] = post.cssselect('td.text-center')[1].text
-        data['date'] = post.cssselect('td.text-center')[2].text
-        data['seeders'] = int(post.cssselect('td.text-center')[3].text)
-        data['leechers'] = int(post.cssselect('td.text-center')[4].text)
-        data['downloads'] = int(post.cssselect('td.text-center')[5].text)
+        data['name'] = post.css('td[colspan="2"] a::attr(title)').extract()[-1]
+        data['category'] = post.css('td[style="padding:0 4px;"] a::attr(title)').extract()[-1]
+        link_and_magnet = post.css('td.text-center')[0]
+        data['link'] = f"{domain}{link_and_magnet.css('a::attr(href)').extract_first()}"
+        data['magnet'] = link_and_magnet.css('a::attr(href)').extract()[1]
+        data['size'] = post.css('td.text-center::text').extract()[3]
+        data['date'] = post.css('td.text-center::text').extract()[4]
+        data['seeders'] = int(post.css('td.text-center::text').extract()[5])
+        data['leechers'] = int(post.css('td.text-center::text').extract()[6])
+        data['downloads'] = int(post.css('td.text-center::text').extract()[7])
         pprint(data)
 
 

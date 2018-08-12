@@ -8,14 +8,14 @@ limit = 500
 
 async def crawl(url):
     tree = await lt.async_fetch(url)
-    items = tree.cssselect('table#archiveResult tr')[1:]
+    items = tree.css('table#archiveResult tr')[1:]
     for item in items:
         data = dict()
-        data['name'] = item.cssselect('td.name')[0].text
-        data['size'] = item.cssselect('td.size')[0].text
-        data['date'] = item.cssselect('td.date')[0].text
-        data['detail'] = domain + item.cssselect('a[rel="information"]')[0].get('href')
-        data['magnet'] = item.cssselect('a[rel="magnet"]')[0].get('href')
+        data['name'] = item.css('td.name::text').extract_first()
+        data['size'] = item.css('td.size::text').extract_first()
+        data['date'] = item.css('td.date::text').extract_first()
+        data['detail'] = domain + item.css('a[rel="information"]::attr(href)').extract_first()
+        data['magnet'] = item.css('a[rel="magnet"]::attr(href)').extract_first()
         pprint(data)
 
 

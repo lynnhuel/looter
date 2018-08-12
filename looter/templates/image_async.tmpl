@@ -4,7 +4,7 @@ domain = ''
 
 def crawl(url):
     tree = lt.fetch(url)
-    imgs = tree.cssselect()
+    imgs = tree.css()
     lt.async_save_imgs(imgs)
 
 

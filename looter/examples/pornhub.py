@@ -21,12 +21,12 @@ cookies = lt.read_cookies()
 def crawl(url):
     tree = lt.fetch(url, use_cookies=True, headers=headers)
     time.sleep(0.5)
-    items = tree.cssselect('.wrap')
+    items = tree.css('.wrap')
     for item in items:
         data = dict()
-        data['views'] = lt.expand_num(item.cssselect('span.views var')[0].text)
-        data['rating'] = int(item.cssselect('.value')[0].text[:-1])
-        viewKey = item.cssselect('a')[0].get('href').split('=')[-1]
+        data['views'] = lt.expand_num(item.css('span.views var::text').extract_first())
+        data['rating'] = int(item.css('.value::text').extract_first()[:-1])
+        viewKey = item.css('a::attr(href)').extract_first().split('=')[-1]
         video = lt.send_request(f'{domain}/embed/{viewKey}', cookies=cookies, headers=headers).text
         flashvars = re.findall('var flashvars =(.*?),\n', video)[0]
         info = json.loads(flashvars)

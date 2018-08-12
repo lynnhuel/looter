@@ -1,6 +1,6 @@
-fake_useragent
 aiohttp
 docopt
+fake_useragent
 lxml
+parsel
 requests
-cssselect

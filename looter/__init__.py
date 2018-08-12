@@ -22,19 +22,20 @@ from operator import itemgetter
 from http import cookiejar
 import asyncio
 from lxml import etree
+from parsel import Selector
 from docopt import docopt
 from .utils import *
 
-VERSION = '1.85'
+VERSION = '1.87'
 
 BANNER = """
 Available objects:
     url           The url of the site you crawled.
     res           The response of the site.
-    tree          The source tree, can be parsed by xpath and cssselect.
+    tree          The element source tree to be parsed.
 
 Available functions:
-    fetch         Get the element tree of an HTML page. [has async version]
+    fetch         Send HTTP request to the site and parse it as a tree. [has async version]
     view          View the page in your browser. (test rendering)
     save_imgs     Save the images you crawled. [has async version]
     alexa_rank    Get the reach and popularity of a site in alexa.
@@ -45,32 +46,28 @@ Available functions:
     login         Login the site using POST request, data required.
 
 Examples:
-    Crawl all the <li> items of a <ul> table:
-        >>> items = tree.cssselect('ul li')
+    Get all the <li> elements of a <ul> table:
+        >>> items = tree.css('ul li')
 
-    Crawl images just in 1-line :d
+    Get all the jpg images just in 1-line :d
         >>> save_imgs(links(res, search='jpg'))
 
 For more info, plz refer to these sites:
-    [looter]: https://github.com/alphardex/looter
-    [cssselect]: http://www.runoob.com/cssref/css-selectors.html
-    [xpath]: http://www.runoob.com/xpath/xpath-syntax.html
+    [looter]: https://looter.readthedocs.io/en/latest/
+    [parsel]: http://parsel.readthedocs.io/en/latest/
 """
 
 
-def fetch(url: str, headers=None, proxies=None, use_cookies=False):
+def fetch(url: str, headers=None, proxies=None, use_cookies=False, use_parsel=True):
     """
-    Get the element tree of an HTML page, use cssselect or xpath to parse it.
-
-    Please refer to the tutorial of this module, and selector tutorial below:
-        cssselect: http://www.runoob.com/cssref/css-selectors.html
-        xpath: http://www.runoob.com/xpath/xpath-syntax.html
+    Send HTTP request and parse it as a tree.
 
     Args:
         url (str): The url of the site.
         headers (optional): Defaults to fake-useragent, can be customed by user.
         proxies (optional): Defaults to None, can be customed by user.
         use_cookies (bool, optional): Defaults to False, if turn it on, paste document.cookie to a 'cookies.txt' file.
+        use_parsel (bool, optional): Defaults to True, use parsel to parse the page. (Just like scrapy)
 
     Returns:
         The element tree of html.
@@ -79,13 +76,13 @@ def fetch(url: str, headers=None, proxies=None, use_cookies=False):
     res = send_request(url, headers=headers, proxies=proxies, cookies=cookies)
     if res:
         html = res.text
-        tree = etree.HTML(html)
+        tree = Selector(text=html) if use_parsel else etree.HTML(html)
         return tree
     else:
         print('Failed to fetch the page.')
 
 
-async def async_fetch(url: str, headers=None, proxy=None, use_cookies=False):
+async def async_fetch(url: str, headers=None, proxy=None, use_cookies=False, use_parsel=True):
     """Fetch the element tree in an async style.
 
     Args:
@@ -93,6 +90,7 @@ async def async_fetch(url: str, headers=None, proxy=None, use_cookies=False):
         headers (optional): Defaults to fake-useragent, can be customed by user.
         proxy (optional): Defaults to None, can be customed by user.
         use_cookies (bool, optional): Defaults to False, if turn it on, paste document.cookie to a 'cookies.txt' file.
+        use_parsel (bool, optional): Defaults to True, use parsel to parse the page. (Just like scrapy)
 
     Returns:
         The element tree of html.
@@ -103,7 +101,7 @@ async def async_fetch(url: str, headers=None, proxy=None, use_cookies=False):
     async with aiohttp.ClientSession(cookies=cookies) as ses:
         async with ses.get(url, headers=headers, proxy=proxy) as res:
             html = await res.text()
-            tree = etree.HTML(html)
+            tree = Selector(text=html) if use_parsel else etree.HTML(html)
             return tree
 
 
@@ -172,15 +170,15 @@ def links(res: requests.models.Response, search=None, absolute=False) -> list:
         list: All the links of the page.
     """
     domain = ensure_schema(get_domain(res.url))
-    tree = etree.HTML(res.text)
-    hrefs = [link.get('href')
-             for link in tree.cssselect('a') if link.get('href')]
+    tree = Selector(text=res.text)
+    hrefs = tree.css('a::attr(href)').extract()
     if search:
         hrefs = [href for href in hrefs if search in href]
     if absolute:
-        hrefs = [f'{domain}{href}' for href in hrefs if not href.startswith('http')]
+        hrefs = [
+            f'{domain}{href}' for href in hrefs if not href.startswith('http')]
     hrefs = [href for href in hrefs if '#' not in href]
-    return hrefs
+    return list(set(hrefs))
 
 
 def re_links(res: requests.models.Response, pattern: str) -> list:
@@ -288,7 +286,7 @@ def cli():
         res = send_request(url)
         if not res:
             exit('Failed to fetch the page.')
-        tree = etree.HTML(res.text)
+        tree = Selector(text=res.text)
         allvars = {**locals(), **globals()}
         try:
             from ptpython.repl import embed

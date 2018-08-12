@@ -4,7 +4,7 @@ import pytest
 import re
 
 
-domain = 'konachan.net'
+domain = 'konachan.com'
 
 # test main functions (excluding async and io functions, which can be tested through running examples)
 
@@ -12,8 +12,8 @@ domain = 'konachan.net'
 @pytest.mark.ok
 def test_fetch():
     tree = lt.fetch(f'{domain}/post')
-    imgs = tree.cssselect('a.directlink')
-    assert len(imgs) > 0
+    imgs = tree.css('a.directlink::attr(href)').extract()
+    assert len(imgs) > 0 and isinstance(imgs[0], str)
 
 
 @pytest.mark.ok
@@ -26,13 +26,15 @@ def test_alexa_rank():
 def test_links():
     res = lt.send_request(domain)
     r = lt.links(res)
-    assert isinstance(r, list) and '#' not in r
+    assert isinstance(r, list)
+    assert '#' not in r and '' not in r 
+    assert len(set(r)) == len(r)
 
 
 @pytest.mark.ok
 def test_re_links():
     res = lt.send_request(f'{domain}/post')
-    hrefs = lt.re_links(res, r'https://konachan.net/wiki/.*?')
+    hrefs = lt.re_links(res, r'https://konachan.com/wiki/.*?')
     assert isinstance(hrefs, list) and len(hrefs) > 5
 
 
@@ -88,9 +90,9 @@ def test_rectify():
 @pytest.mark.ok
 def test_get_img_info():
     tree = lt.fetch(f'{domain}/post')
-    img = tree.cssselect('a.directlink')[0]
+    img = tree.css('a.directlink::attr(href)').extract_first()
     url, name = lt.get_img_info(img)
-    assert url == img.get('href') and '%' not in name
+    assert url == img and '%' not in name
 
 
 @pytest.mark.ok
