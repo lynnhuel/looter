@@ -27,7 +27,7 @@ def test_links():
     res = lt.send_request(domain)
     r = lt.links(res)
     assert isinstance(r, list)
-    assert '#' not in r and '' not in r 
+    assert '#' not in r and '' not in r
     assert len(set(r)) == len(r)
 
 
