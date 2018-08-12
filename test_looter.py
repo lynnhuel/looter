@@ -88,11 +88,11 @@ def test_rectify():
 
 
 @pytest.mark.ok
-def test_get_img_info():
+def test_get_img_name():
     tree = lt.fetch(f'{domain}/post')
     img = tree.css('a.directlink::attr(href)').extract_first()
-    url, name = lt.get_img_info(img)
-    assert url == img and '%' not in name
+    name = lt.get_img_name(img)
+    assert '%' not in name
 
 
 @pytest.mark.ok

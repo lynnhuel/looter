@@ -90,20 +90,19 @@ def rectify(name: str) -> str:
     return name
 
 
-def get_img_info(url: str, max_length=160) -> tuple:
-    """Get the info of an image.
+def get_img_name(url: str, max_length=160) -> tuple:
+    """Get the name of an image.
 
     Args:
-        url (str): The url of the site.
         max_length (int, optional): Defaults to 160. The maximal length of the filename.
 
     Returns:
-        tuple: The url of an image and its name.
+        tuple: The name of an image.
     """
     name = ensure_schema(url).split('/')[-1]
     fname, ext = rectify(name).rsplit('.', 1)
     name = f'{fname[:max_length]}.{ext}'
-    return url, name
+    return name
 
 
 @perf
@@ -120,7 +119,7 @@ def save_img(url: str, random_name=False, headers=None, proxies=None, cookies=No
     """
     if not headers:
         headers = {'User-Agent': UserAgent().random}
-    url, name = get_img_info(url)
+    name = get_img_name(url)
     if random_name:
         fname, ext = os.path.splitext(name)
         name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
@@ -146,7 +145,7 @@ async def async_save_img(url: str, random_name=False, headers=None, proxy=None, 
     """
     if not headers:
         headers = {'User-Agent': UserAgent().random}
-    url, name = get_img_info(url)
+    name = get_img_name(url)
     if random_name:
         fname, ext = os.path.splitext(name)
         name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
