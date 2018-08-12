@@ -90,18 +90,23 @@ def rectify(name: str) -> str:
     return name
 
 
-def get_img_name(url: str, max_length=160) -> tuple:
+def get_img_name(url: str, max_length=160, random_name=False) -> str:
     """Get the name of an image.
 
     Args:
+        url (str): The url of the image.
         max_length (int, optional): Defaults to 160. The maximal length of the filename.
+        random_name (int, optional): Defaults to False. If names of images are duplicated, use this.
 
     Returns:
-        tuple: The name of an image.
+        str: The name of an image.
     """
     name = ensure_schema(url).split('/')[-1]
     fname, ext = rectify(name).rsplit('.', 1)
     name = f'{fname[:max_length]}.{ext}'
+    if random_name:
+        fname, ext = os.path.splitext(name)
+        name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
     return name
 
 
@@ -119,13 +124,9 @@ def save_img(url: str, random_name=False, headers=None, proxies=None, cookies=No
     """
     if not headers:
         headers = {'User-Agent': UserAgent().random}
-    name = get_img_name(url)
-    if random_name:
-        fname, ext = os.path.splitext(name)
-        name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
+    name = get_img_name(url, random_name=random_name)
     try:
-        data = send_request(url, headers=headers,
-                            proxies=proxies, cookies=cookies).content
+        data = send_request(url, headers=headers, proxies=proxies, cookies=cookies).content
         with open(name, 'wb') as f:
             f.write(data)
             print(f'Saved {name}')
@@ -145,10 +146,7 @@ async def async_save_img(url: str, random_name=False, headers=None, proxy=None, 
     """
     if not headers:
         headers = {'User-Agent': UserAgent().random}
-    name = get_img_name(url)
-    if random_name:
-        fname, ext = os.path.splitext(name)
-        name = f'{fname}{str(uuid.uuid1())[:8]}{ext}'
+    name = get_img_name(url, random_name=random_name)
     with open(name, 'wb') as f:
         async with aiohttp.ClientSession(cookies=cookies) as ses:
             async with ses.get(url, headers=headers, proxy=proxy) as res:
