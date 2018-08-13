@@ -21,5 +21,4 @@ def crawl(url):
 
 if __name__ == '__main__':
     tasklist = [*[f'{domain}/xinggan/'] ,*[f'{domain}/xinggan/list_6_{n}.html' for n in range(2, 153)]]
-    with futures.ThreadPoolExecutor(30) as executor:
-        executor.map(crawl, tasklist)
+    result = [crawl(task) for task in tasklist]
