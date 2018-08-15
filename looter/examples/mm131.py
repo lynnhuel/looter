@@ -1,5 +1,4 @@
 import looter as lt
-from concurrent import futures
 
 domain = 'http://www.mm131.com'
 headers = {

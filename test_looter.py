@@ -1,12 +1,16 @@
 import looter as lt
+import os
+import json
 import requests
 import pytest
+import random
 import re
 
 
 domain = 'konachan.com'
+broken_domain = 'konichee.com'
 
-# test main functions (excluding async and io functions, which can be tested through running examples)
+# test main functions
 
 
 @pytest.mark.ok
@@ -14,21 +18,25 @@ def test_fetch():
     tree = lt.fetch(f'{domain}/post')
     imgs = tree.css('a.directlink::attr(href)').extract()
     assert len(imgs) > 0 and isinstance(imgs[0], str)
+    assert not lt.fetch(broken_domain)
 
 
 @pytest.mark.ok
 def test_alexa_rank():
     r = lt.alexa_rank(domain)
     assert isinstance(r, tuple) and len(r) == 3
+    assert not lt.alexa_rank(broken_domain)
 
 
 @pytest.mark.ok
 def test_links():
     res = lt.send_request(domain)
     r = lt.links(res)
+    wikis = lt.links(res, search='wiki')
     assert isinstance(r, list)
     assert '#' not in r and '' not in r
     assert len(set(r)) == len(r)
+    assert all(['wiki' in wiki for wiki in wikis])
 
 
 @pytest.mark.ok
@@ -39,9 +47,20 @@ def test_re_links():
 
 
 @pytest.mark.ok
+def test_save_as_json():
+    data = [{'rank': 2, 'name': 'python'}, {'rank': 1, 'name': 'js'}, {'rank': 3, 'name': 'java'}]
+    lt.save_as_json(data, sort_by='rank')
+    with open('data.json', 'r') as f:
+        ordered_data = json.loads(f.read())
+    assert ordered_data[0]['rank'] == 1
+    os.remove('data.json')
+
+
+@pytest.mark.ok
 def test_parse_robots():
     robots_url = lt.parse_robots(f'{domain}/post')
     assert isinstance(robots_url, list) and len(robots_url) > 5
+    assert not lt.parse_robots(broken_domain)
 
 
 @pytest.mark.ok
@@ -57,6 +76,7 @@ def test_login():
     message_count = re.findall(
         r"('messageCount'.*?).*?('unreadMessageCount'.*?),", index.text)[0]
     assert message_count[0] == "'messageCount'"
+    assert not lt.login(broken_domain, postdata)
 
 # test utils
 
@@ -92,7 +112,22 @@ def test_get_img_name():
     tree = lt.fetch(f'{domain}/post')
     img = tree.css('a.directlink::attr(href)').extract_first()
     name = lt.get_img_name(img)
+    random_name = lt.get_img_name(img, random_name=True)
     assert '%' not in name
+    assert random_name != name
+
+
+@pytest.mark.ok
+def test_save_img():
+    tree = lt.fetch(f'{domain}/post')
+    img = tree.css('a.directlink::attr(href)').extract_first()
+    name = lt.get_img_name(img)
+    lt.save_img(img)
+    with open(name, 'rb') as f:
+        img_data = f.read()
+    assert isinstance(img_data, bytes) and len(img_data) > 100
+    assert not lt.save_img(broken_domain)
+    os.remove(name)
 
 
 @pytest.mark.ok

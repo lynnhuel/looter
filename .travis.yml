@@ -3,10 +3,14 @@ python:
   - 3.6
 # command to install dependencies
 install:
+  - pip install codecov
   - pip install -r requirements.txt
 # command to run the dependencies
 script:
   - pytest
+
+after_success:
+  - codecov
 
 # Assuming you have installed the travis-ci CLI tool, after you
 # create the Github repo and add it to Travis, run the

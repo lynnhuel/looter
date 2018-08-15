@@ -1,0 +1,11 @@
+[report]
+exclude_lines =
+    async def async_fetch
+    def view
+    def save_imgs
+    def async_save_imgs
+    if use_cookies:
+    def cli
+    cli()
+    def perf
+    async def async_save_img
