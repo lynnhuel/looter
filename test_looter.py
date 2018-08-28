@@ -54,6 +54,12 @@ def test_save_as_json():
         ordered_data = json.loads(f.read())
     assert ordered_data[0]['rank'] == 1
     os.remove('data.json')
+    dup_data = [{'a': 1}, {'a': 1}, {'b': 2}]
+    lt.save_as_json(dup_data, no_duplicate=True)
+    with open('data.json', 'r') as f:
+        unique_data = json.loads(f.read())
+    assert len(dup_data) > len(unique_data)
+    os.remove('data.json')
 
 
 @pytest.mark.ok

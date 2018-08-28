@@ -26,7 +26,7 @@ from parsel import Selector
 from docopt import docopt
 from .utils import *
 
-VERSION = '1.87'
+VERSION = '1.88'
 
 BANNER = """
 Available objects:
@@ -196,16 +196,23 @@ def re_links(res: requests.models.Response, pattern: str) -> list:
     return hrefs
 
 
-def save_as_json(total: list, name='data', sort_by=None):
+def save_as_json(total: list, name='data', sort_by=None, no_duplicate=False):
     """Save what you crawled as a json file.
 
     Args:
         total (list): Total of data you crawled.
         name (str, optional): Defaults to 'data'. The name of the json file.
         sort_by ([type], optional): Defaults to None. Sort items by a specific key.
+        no_duplicate (bool, optional): Defaults to False. If True, it will only keep unique data.
     """
     if sort_by:
         total = sorted(total, key=itemgetter(sort_by))
+    if no_duplicate:
+        unique = []
+        for obj in total:
+            if obj not in unique:
+                unique.append(obj)
+        total = unique
     with open(f'{name}.json', 'w', encoding='utf-8') as f:
         f.write(json.dumps(total, ensure_ascii=False))
 
