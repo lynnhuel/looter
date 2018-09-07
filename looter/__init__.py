@@ -13,20 +13,20 @@ Options:
   --version        Show version.
   --async          Use async instead of concurrent.
 """
-import os
 import json
 import code
 import re
 import webbrowser
 from operator import itemgetter
 from http import cookiejar
+from pathlib import Path
 import asyncio
 from lxml import etree
 from parsel import Selector
 from docopt import docopt
 from .utils import *
 
-VERSION = '1.88'
+VERSION = '1.89'
 
 BANNER = """
 Available objects:
@@ -281,10 +281,9 @@ def cli():
             exit('Plz provide a template (data, image)')
         if async_:
             template = f'{template}_async'
-        package_path = os.path.dirname(__file__)
-        with open(f'{package_path}\\templates\\{template}.tmpl', 'r') as i, open(f'{name}.py', 'w') as o:
-            o.write(i.read())
-
+        package_dir = Path(__file__).parent
+        template_text = package_dir.joinpath('templates', f'{template}.tmpl').read_text()
+        Path(f'{name}.py').write_text(template_text)
     if argv['shell']:
         if not argv['<url>']:
             url = input('Which site do u want to crawl?\nurl: ')
